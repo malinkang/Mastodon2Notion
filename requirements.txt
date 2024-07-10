@@ -7,3 +7,4 @@ python-dotenv
 emoji
 mastodon.py
 beautifulsoup4
+lxml
