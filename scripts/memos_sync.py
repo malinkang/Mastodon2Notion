@@ -21,6 +21,7 @@ def authenticate_user():
     }
 
     response = requests.post(url, json=data)
+    print(response)
     if response.status_code == 200:
         return response.cookies
     else:
