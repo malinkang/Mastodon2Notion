@@ -1,4 +1,4 @@
-name: mastodon sync
+name: memos sync
 
 on:
   workflow_dispatch:

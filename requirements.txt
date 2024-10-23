@@ -8,3 +8,4 @@ emoji
 mastodon.py
 beautifulsoup4
 lxml
+mistletoe
