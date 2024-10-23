@@ -7,7 +7,6 @@ import requests
 from notion_helper import NotionHelper
 import utils
 from mastodon import Mastodon
-from notion_client import Client
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -68,7 +67,6 @@ def get_latest():
 if __name__ == "__main__":
     notion_helper = NotionHelper()
     latest = get_latest()
-
     mastodon = Mastodon(
         api_base_url=os.getenv("MASTODON_API_BASE_URL"),
         access_token=os.getenv("MASTODON_ACCESS_TOKEN"),

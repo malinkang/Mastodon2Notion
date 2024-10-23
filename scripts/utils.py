@@ -69,6 +69,16 @@ def get_paragraph(content, bold=False):
             "color": "default",
         },
     }
+def get_image(url):
+    return {
+    "type": "image",
+    "image": {
+        "type": "external",
+        "external": {
+            "url": url
+        }
+    }
+    }
 
 def get_bulleted_list_item(content, bold=False):
     return {
