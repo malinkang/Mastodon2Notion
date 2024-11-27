@@ -9,3 +9,4 @@ mastodon.py
 beautifulsoup4
 lxml
 mistletoe
+html2text

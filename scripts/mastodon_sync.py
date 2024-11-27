@@ -1,14 +1,17 @@
 import argparse
 import json
 import os
+import mistletoe
 import pendulum
 from retrying import retry
 import requests
 from notion_helper import NotionHelper
+from notion_renderer import NotionPyRenderer
 import utils
 from mastodon import Mastodon
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+import html2text
 
 load_dotenv()
 
@@ -54,8 +57,14 @@ def get_timelines():
 
 def get_latest():
     sorts = [{"property": "日期", "direction": "descending"}]
+    filters = {
+        "property": "平台",
+        "select": {
+            "equals": "mastodon"
+        }
+    }
     r = notion_helper.query(
-        database_id=notion_helper.content_database_id, sorts=sorts, page_size=1
+        database_id=notion_helper.content_database_id,filter=filters, sorts=sorts, page_size=1
     )
     if len(r.get("results")):
         return utils.get_property_value(
@@ -72,18 +81,20 @@ if __name__ == "__main__":
         access_token=os.getenv("MASTODON_ACCESS_TOKEN"),
     )
     timelines = get_timelines()
-    d = notion_helper.get_property_type(notion_helper.content_database_id)
+    d = notion_helper.get_property_type(notion_helper.content_database_id)    
     for timeline in timelines:
-        title = ""
-        if timeline.get("content"):
-            soup = BeautifulSoup(timeline.get("content"), "lxml")
-            title = "".join(soup.p.find_all(text=True, recursive=False))
+        title = timeline.get("content")
+        children = []
         status = {
             "标题": title,
             "id": str(timeline.get("id")),
             "链接": timeline.get("url"),
             "日期": int(timeline.get("created_at").timestamp()),
+            "平台": "mastodon",
         }
+        markdown_content = html2text.html2text(title)
+        l = mistletoe.markdown(markdown_content, NotionPyRenderer)
+        children.extend(l)
         if timeline.get("tags"):
             status["标签"] = [
                 notion_helper.get_relation_id(
@@ -113,6 +124,7 @@ if __name__ == "__main__":
                 )
                 for x in timeline.get("media_attachments")
             ]
+            children.extend([utils.get_image(x.get("url")) for x in timeline.get("media_attachments")])
         properties = utils.get_properties(status, d)
         notion_helper.get_all_relation(properties)
         notion_helper.get_date_relation(
@@ -124,4 +136,5 @@ if __name__ == "__main__":
             "type": "database_id",
         }
         icon = {"type": "emoji", "emoji": "📝"}
-        notion_helper.create_page(parent=parent, properties=properties, icon=icon)
+        page_id = notion_helper.create_page(parent=parent, properties=properties, icon=icon).get("id")
+        notion_helper.append_blocks(page_id,children)
